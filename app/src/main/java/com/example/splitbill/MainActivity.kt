@@ -14,6 +14,7 @@ import com.example.splitbill.ui.theme.SplitBillTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             SplitBillTheme {
                 Surface(

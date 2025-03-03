@@ -1,4 +1,4 @@
-package com.example.splitbill.ui.screens.welcome.components
+package com.example.splitbill.ui.screens.welcome
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

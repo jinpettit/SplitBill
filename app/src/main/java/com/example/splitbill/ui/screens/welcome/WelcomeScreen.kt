@@ -20,7 +20,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.splitbill.R
-import com.example.splitbill.ui.screens.welcome.components.FeatureItem
 
 @Composable
 fun WelcomeScreen(onGetStartedClick: () -> Unit) {
