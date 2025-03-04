@@ -1,6 +1,5 @@
 package com.example.splitbill.utils
 
-
 object PermissionUtils {
     val REQUIRED_PERMISSIONS = arrayOf(
         android.Manifest.permission.CAMERA,
