@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.example.splitbill.data.models.Participant
 import com.example.splitbill.data.models.Receipt
 import com.example.splitbill.data.models.ReceiptItem
+import java.util.UUID
 
 class AssignItemsViewModel : ViewModel() {
 
@@ -18,7 +19,16 @@ class AssignItemsViewModel : ViewModel() {
     private val _restaurantName = mutableStateOf("")
     val restaurantName = _restaurantName
 
-    private val _receiptTotal = mutableStateOf(0.0)
+    private val _subtotal = mutableStateOf<Double?>(null)
+    val subtotal = _subtotal
+
+    private val _tip = mutableStateOf<Double?>(null)
+    val tip = _tip
+
+    private val _tax = mutableStateOf<Double?>(null)
+    val tax = _tax
+
+    private val _receiptTotal = mutableStateOf<Double?>(null)
     val receiptTotal = _receiptTotal
 
     private var receipt: Receipt? = null
@@ -26,11 +36,30 @@ class AssignItemsViewModel : ViewModel() {
     fun initializeWithReceipt(receipt: Receipt) {
         this.receipt = receipt
         _receiptItems.clear()
-        _receiptItems.addAll(receipt.items)
+
+        receipt.items.forEach { originalItem ->
+            if (originalItem.quantity > 1) {
+                for (i in 1..originalItem.quantity) {
+                    _receiptItems.add(
+                        originalItem.copy(
+                            id = UUID.randomUUID().toString(),
+                            quantity = 1,
+                            assignedParticipantIds = emptyList()
+                        )
+                    )
+                }
+            } else {
+                _receiptItems.add(originalItem)
+            }
+        }
+
         _participants.clear()
         _participants.addAll(receipt.participants)
         _restaurantName.value = receipt.restaurantName
         _receiptTotal.value = receipt.totalAmount
+        _subtotal.value = receipt.subtotal
+        _tip.value = receipt.tip
+        _tax.value = receipt.tax
     }
 
     fun assignParticipant(item: ReceiptItem, participant: Participant) {
@@ -81,11 +110,18 @@ class AssignItemsViewModel : ViewModel() {
     fun createUpdatedReceipt(): Receipt {
         return receipt?.copy(
             items = receiptItems.toList(),
-            participants = participants.toList()
+            participants = participants.toList(),
+            subtotal = subtotal.value,
+            tip = tip.value,
+            tax = tax.value,
+            totalAmount = receiptTotal.value
         ) ?: Receipt(
             restaurantName = restaurantName.value,
             items = receiptItems.toList(),
             participants = participants.toList(),
+            subtotal = subtotal.value,
+            tip = tip.value,
+            tax = tax.value,
             totalAmount = receiptTotal.value
         )
     }

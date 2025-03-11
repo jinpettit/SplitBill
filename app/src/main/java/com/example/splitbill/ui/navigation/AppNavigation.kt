@@ -1,6 +1,7 @@
 package com.example.splitbill.ui.navigation
 
 
+import android.content.Intent
 import com.example.splitbill.ui.screens.edit.EditReceiptViewModel
 import android.net.Uri
 import android.os.Build
@@ -23,6 +24,8 @@ import com.example.splitbill.ui.screens.assign.AddParticipantDialog
 import com.example.splitbill.ui.screens.assign.AssignItemsScreen
 import com.example.splitbill.ui.screens.assign.AssignItemsViewModel
 import com.example.splitbill.ui.screens.edit.EditReceiptScreen
+import com.example.splitbill.ui.screens.summary.BillSummaryScreen
+import com.example.splitbill.ui.screens.summary.BillSummaryViewModel
 import com.example.splitbill.ui.screens.upload.UploadReceiptScreen
 import com.example.splitbill.ui.screens.upload.UploadReceiptViewModel
 import com.example.splitbill.ui.screens.welcome.WelcomeScreen
@@ -47,7 +50,10 @@ fun AppNavigation(navController: NavHostController = rememberNavController(),
                   cameraUtils: CameraUtils = CameraUtils(LocalContext.current),
                   ocrUtils: OCRUtils = OCRUtils(LocalContext.current)
 ) {
+    val context = LocalContext.current
     val assignItemsViewModel = remember { AssignItemsViewModel() }
+    val editReceiptViewModel = remember { mutableStateOf<EditReceiptViewModel?>(null) }
+    val billSummaryViewModel = remember { BillSummaryViewModel() }
 
     NavHost(
         navController = navController,
@@ -90,12 +96,16 @@ fun AppNavigation(navController: NavHostController = rememberNavController(),
             }
 
             val viewModel = remember {
-                EditReceiptViewModel(ocrUtils)
+                editReceiptViewModel.value ?: EditReceiptViewModel(ocrUtils).also {
+                    editReceiptViewModel.value = it
+                }
             }
 
             receiptUri?.let {
                 LaunchedEffect(it) {
-                    viewModel.processReceiptImage(it)
+                    if (viewModel.receiptItems.isEmpty()) {
+                        viewModel.processReceiptImage(it)
+                    }
                 }
             }
 
@@ -103,7 +113,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController(),
                 receiptItems = viewModel.receiptItems,
                 restaurantName = viewModel.restaurantName.value,
                 receiptDate = viewModel.receiptDate.value,
-                receiptTotal = viewModel.calculateTotal(),
+                receiptTotal = viewModel.subtotal.value,
                 onUpdateRestaurantInfo = viewModel::updateRestaurantInfo,
                 onItemUpdate = viewModel::updateItem,
                 onItemDelete = viewModel::deleteItem,
@@ -113,7 +123,10 @@ fun AppNavigation(navController: NavHostController = rememberNavController(),
                         restaurantName = viewModel.restaurantName.value,
                         items = viewModel.receiptItems,
                         participants = emptyList(),
-                        totalAmount = viewModel.calculateTotal()
+                        totalAmount = viewModel.totalAmount.value,
+                        subtotal = viewModel.subtotal.value,
+                        tip = viewModel.tip.value,
+                        tax = viewModel.tax.value
                     )
                     assignItemsViewModel.initializeWithReceipt(receipt)
                     navController.navigate(AppRoutes.ASSIGN_ITEMS)
@@ -127,13 +140,15 @@ fun AppNavigation(navController: NavHostController = rememberNavController(),
 
             AssignItemsScreen(
                 restaurantName = assignItemsViewModel.restaurantName.value,
-                receiptTotal = assignItemsViewModel.receiptTotal.value,
+                receiptTotal = assignItemsViewModel.subtotal.value,
                 receiptItems = assignItemsViewModel.receiptItems,
                 participants = assignItemsViewModel.participants,
                 onAssignParticipant = assignItemsViewModel::assignParticipant,
                 onRemoveParticipant = assignItemsViewModel::removeParticipant,
                 onAddParticipant = { showAddParticipantDialog = true },
                 onContinue = {
+                    val updatedReceipt = assignItemsViewModel.createUpdatedReceipt()
+                    billSummaryViewModel.initializeWithReceipt(updatedReceipt)
                     navController.navigate(AppRoutes.BILL_SUMMARY)
                 },
                 onBackClick = { navController.popBackStack() }
@@ -150,6 +165,23 @@ fun AppNavigation(navController: NavHostController = rememberNavController(),
         }
 
         composable(AppRoutes.BILL_SUMMARY) {
+            BillSummaryScreen(
+                restaurantName = billSummaryViewModel.restaurantName.value,
+                date = billSummaryViewModel.date.value,
+                subtotal = billSummaryViewModel.subtotal.value,
+                tip = billSummaryViewModel.tip.value,
+                tax = billSummaryViewModel.tax.value,
+                total = billSummaryViewModel.total.value,
+                participants = billSummaryViewModel.participantSummaries.value,
+                onShareViaText = {
+                    val textIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, billSummaryViewModel.generateTextSummary())
+                    }
+                    context.startActivity(Intent.createChooser(textIntent, "Share via Text"))
+                },
+                onBackClick = { navController.popBackStack() }
+            )
         }
     }
 }

@@ -19,7 +19,7 @@ import com.example.splitbill.data.models.ReceiptItem
 @Composable
 fun AssignItemsScreen(
     restaurantName: String,
-    receiptTotal: Double,
+    receiptTotal: Double?,
     receiptItems: List<ReceiptItem>,
     participants: List<Participant>,
     onAssignParticipant: (ReceiptItem, Participant) -> Unit,
@@ -75,7 +75,7 @@ fun AssignItemsScreen(
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = "Total: $${String.format("%.2f", receiptTotal)}",
+                        text = "Subtotal: $${String.format("%.2f", receiptTotal)}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )

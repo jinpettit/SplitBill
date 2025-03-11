@@ -11,5 +11,8 @@ data class Receipt(
     val participants: List<Participant> = emptyList(),
     val date: Date? = null,
     val restaurantName: String = "",
-    val totalAmount: Double = 0.0
+    val totalAmount: Double? = 0.0,
+    val tip: Double? = 0.0,
+    val subtotal: Double? = 0.0,
+    val tax: Double? = 0.0
 )

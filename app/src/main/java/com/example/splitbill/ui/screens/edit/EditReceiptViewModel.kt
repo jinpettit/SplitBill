@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.splitbill.data.models.Receipt
 import com.example.splitbill.data.models.ReceiptItem
 import com.example.splitbill.utils.OCRUtils
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,8 +32,21 @@ class EditReceiptViewModel(
 
     private var imageUri: Uri? = null
 
+    private var processedImageUri: Uri? = null
+
+    private val _subtotal = mutableStateOf<Double?>(null)
+    val subtotal = _subtotal
+    private val _tip = mutableStateOf<Double?>(null)
+    val tip = _tip
+    private val _tax = mutableStateOf<Double?>(null)
+    val tax = _tax
+    private val _totalAmount = mutableStateOf<Double?>(null)
+    val totalAmount = _totalAmount
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun processReceiptImage(uri: Uri) {
+        if (uri == processedImageUri && receiptItems.isNotEmpty()) return
+
         imageUri = uri
         _isLoading.value = true
         _error.value = null
@@ -47,6 +59,11 @@ class EditReceiptViewModel(
                 _restaurantName.value = receipt.restaurantName
                 _receiptDate.value = receipt.date
                 _isLoading.value = false
+                processedImageUri = uri
+                _subtotal.value = receipt.subtotal
+                _tip.value = receipt.tip
+                _tax.value = receipt.tax
+                _totalAmount.value = receipt.totalAmount
             } catch (e: Exception) {
                 _error.value = "Failed to process receipt: ${e.message}"
                 _isLoading.value = false
@@ -80,17 +97,4 @@ class EditReceiptViewModel(
         )
     }
 
-    fun calculateTotal(): Double {
-        return receiptItems.sumOf { it.price * it.quantity }
-    }
-
-    fun createReceipt(): Receipt {
-        return Receipt(
-            imageUri = imageUri,
-            restaurantName = restaurantName.value,
-            date = receiptDate.value,
-            items = receiptItems.toList(),
-            totalAmount = calculateTotal()
-        )
-    }
 }

@@ -28,7 +28,7 @@ fun EditReceiptScreen(
     receiptItems: List<ReceiptItem>,
     restaurantName: String,
     receiptDate: Date?,
-    receiptTotal: Double,
+    receiptTotal: Double?,
     onUpdateRestaurantInfo: (String, Date?) -> Unit,
     onItemUpdate: (ReceiptItem) -> Unit,
     onItemDelete: (ReceiptItem) -> Unit,

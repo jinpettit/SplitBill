@@ -103,15 +103,22 @@ class OCRUtils(private val context: Context) {
         val items = parseReceiptItems(text)
         Log.d(TAG, "Extracted items: $items")
 
-        val totalAmount = extractTotalAmount(text) ?: calculateTotal(items)
+        val totalAmount = extractTotalAmount(text)
         Log.d(TAG, "Extracted total amount: $totalAmount")
+
+        val subTotal = extractSubtotal(text)
+        val tip = extractTip(text)
+        val tax = extractTax(text)
 
         return Receipt(
             imageUri = imageUri,
             restaurantName = restaurantName,
             date = date,
             items = items,
-            totalAmount = totalAmount
+            totalAmount = totalAmount,
+            subtotal = subTotal,
+            tip = tip,
+            tax = tax
         )
     }
 
@@ -231,18 +238,27 @@ private fun parseReceiptItems(text: String): List<ReceiptItem> {
 }
 
     private fun extractTotalAmount(text: String): Double? {
-        val totalPattern = Regex("""(?:TOTAL|AMOUNT)\s*\$?\s*(\d+\.\d{2})""", RegexOption.IGNORE_CASE)
-        val match = totalPattern.find(text)
+        val totalPattern = Regex("""(?<!SUB|SUB-)(?:TOTAL|AMOUNT|GRAND\s+TOTAL|BALANCE|DUE)\s*\$?\s*(\d+\.\d{2})""", RegexOption.IGNORE_CASE)
 
-        if (match != null) {
-            return match.groupValues[1].toDouble()
+        val matches = totalPattern.findAll(text).toList()
+        return if (matches.isNotEmpty()) {
+            matches.last().groupValues[1].toDoubleOrNull()
+        } else {
+            null
         }
-
-        return null
     }
 
-    private fun calculateTotal(items: List<ReceiptItem>): Double {
-        return items.sumOf { it.price * it.quantity }
+    private fun extractSubtotal(text: String): Double? {
+        val subtotalPattern = Regex("""(?:SUBTOTAL|SUB-TOTAL)\s*\$?\s*(\d+\.\d{2})""", RegexOption.IGNORE_CASE)
+        return subtotalPattern.find(text)?.groupValues?.get(1)?.toDoubleOrNull()
     }
 
+    private fun extractTip(text: String): Double? {
+        val tipPattern = Regex("""(?:TIP|GRATUITY)\s*\$?\s*(\d+\.\d{2})""", RegexOption.IGNORE_CASE)
+        return tipPattern.find(text)?.groupValues?.get(1)?.toDoubleOrNull()
+    }
 
+    private fun extractTax(text: String): Double? {
+        val taxPattern = Regex("""(?:TAX|SALES TAX)\s*\$?\s*(\d+\.\d{2})""", RegexOption.IGNORE_CASE)
+        return taxPattern.find(text)?.groupValues?.get(1)?.toDoubleOrNull()
+    }
