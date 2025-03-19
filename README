@@ -1,0 +1,5 @@
+1. My app is a group payment splitting tool that lets users scan receipts, assign items to participants, and instantly calculate how much each person owes. Using the google cloud vision API it extracts text from receipts, organizes the data, and simplifies bill-splitting without the need for manual entry. All processing is done locally, keeping the app fast and private.
+2. https://www.figma.com/design/JxwJJ1pJSMJFI4WXs0rZW2/Untitled?node-id=0-1&p=f
+3. Jetpack Compose, Material Icons Extended, Jetpack CameraX, ML Kit, Retrofit + Gson Converter , Accompanist Permissions, Google Cloud Vision API
+4. AGP Version: 8.8.0, Gradle Version: 8.10.2, Target SDK version: 35, Min SDK version: 24, Android Features: Camera (not required), Android Permissions: CAMERA, READ_MEDIA_IMAGES, READ_MEDIA_VISUAL_USER_SELECTED
+5. Requires a Google Cloud Vision API key to properly run. To use the API key create a file api_keys.xml in res/values and insert it as a string resource string with the name API_KEY. My API key is in the comments of my submission
